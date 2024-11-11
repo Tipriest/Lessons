@@ -1,0 +1,3 @@
+[submodule "[Datawhale] 模型压缩"]
+	path = [Datawhale] 模型压缩
+	url = git@github.com:datawhalechina/awesome-compression.git
