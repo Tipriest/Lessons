@@ -17,7 +17,11 @@
 
 // Useful customized headers
 #include "trajectory_generator_waypoint.h"
+#include "backward.hpp"
 
+namespace backward {
+backward::SignalHandling sh;
+}
 using namespace std;
 using namespace Eigen;
 
