@@ -163,6 +163,10 @@ void goal_callback(const geometry_msgs::PoseStamped::ConstPtr& msg) {
         waypoints = eight();
         publish_waypoints_vis();
         publish_waypoints();
+    } else if (waypoint_type == string("rectangle")) {
+        waypoints = rectangle();
+        publish_waypoints_vis();
+        publish_waypoints();
     } else if (waypoint_type == string("point")) {
         waypoints = point();
         publish_waypoints_vis();
