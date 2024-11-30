@@ -13,7 +13,7 @@ nav_msgs::Path point()
     pt.pose.orientation = tf::createQuaternionMsgFromYaw(0.0);
     
     double h = 1.0;
-    double scale = 0.25;
+    double scale = 50;
 
     pt.pose.position.y =  scale * 0.0;
     pt.pose.position.x =  scale * 2.0;
@@ -57,7 +57,38 @@ nav_msgs::Path point()
     // Return
     return waypoints;
 }
+nav_msgs::Path rectangle()
+{
+    // rectangle parameters
+    nav_msgs::Path waypoints;
+    geometry_msgs::PoseStamped pt;
+    pt.pose.orientation = tf::createQuaternionMsgFromYaw(0.0);
+    
+    double h = 1.0;
+    double scale = 0.25;
+    pt.pose.position.y =  scale * 0.0;
+    pt.pose.position.x =  scale * 0.0;
+    pt.pose.position.z =  h;
+    waypoints.poses.push_back(pt);
 
+    pt.pose.position.y =  scale * 0.0;
+    pt.pose.position.x =  scale * 20.0;
+    pt.pose.position.z =  h;
+    waypoints.poses.push_back(pt);      
+
+    pt.pose.position.y =  scale * 20.0;
+    pt.pose.position.x =  scale * 20.0;
+    pt.pose.position.z =  h;
+    waypoints.poses.push_back(pt);      
+
+    pt.pose.position.y =  scale * 20.0;
+    pt.pose.position.x =  scale * 0.0;
+    pt.pose.position.z =  h;
+    waypoints.poses.push_back(pt); 
+
+    // Return
+    return waypoints;
+}
 // Circle trajectory
 nav_msgs::Path circle()
 {
@@ -95,17 +126,17 @@ nav_msgs::Path circle()
     pt.pose.position.y = 0.0 * scale;
     pt.pose.position.x = 2.0 * scale;
     pt.pose.position.z =  h;
-    waypoints.poses.push_back(pt); 
+    waypoints.poses.push_back(pt);
 
     pt.pose.position.y = 1.0 * scale;
     pt.pose.position.x = 1.0 * scale;
     pt.pose.position.z =  h;
-    waypoints.poses.push_back(pt);  
+    waypoints.poses.push_back(pt);
     
     pt.pose.position.y = 0.0 * scale;
     pt.pose.position.x = 0.0 * scale;
     pt.pose.position.z =  h;
-    waypoints.poses.push_back(pt);         
+    waypoints.poses.push_back(pt);
 
     // Return
     return waypoints;

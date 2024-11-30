@@ -22,7 +22,10 @@ class TrajectoryGeneratorWaypoint {
             const Eigen::VectorXd &Time);
         
         int Factorial(int x);
-};
+        Eigen::MatrixXd getM(int n_seg, int n_order, const Eigen::VectorXd& ts);
+        Eigen::MatrixXd getCt(int n_seg, int n_order);
+        Eigen::MatrixXd getQ(int n_seg, int n_order, const Eigen::VectorXd& ts);
+};      
         
 
 #endif

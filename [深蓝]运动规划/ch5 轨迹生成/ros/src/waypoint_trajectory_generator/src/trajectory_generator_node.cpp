@@ -17,7 +17,11 @@
 
 // Useful customized headers
 #include "trajectory_generator_waypoint.h"
+#include "backward.hpp"
 
+namespace backward {
+backward::SignalHandling sh;
+}
 using namespace std;
 using namespace Eigen;
 
@@ -38,10 +42,10 @@ using namespace Eigen;
     Vector3d _startVel = Vector3d::Zero();
 
 // declare
-    void visWayPointTraj( MatrixXd polyCoeff, VectorXd time);
+    void visWayPointTraj( MatrixXd polyCoeff, VectorXd time, const MatrixXd& Path);
     void visWayPointPath(MatrixXd path);
     Vector3d getPosPoly( MatrixXd polyCoeff, int k, double t );
-    VectorXd timeAllocation( MatrixXd Path);
+    VectorXd timeAllocation(const MatrixXd& Path, float total_time);
     void trajGeneration(Eigen::MatrixXd path);
     void rcvWaypointsCallBack(const nav_msgs::Path & wp);
 
@@ -75,13 +79,13 @@ void trajGeneration(Eigen::MatrixXd path)
 {
     TrajectoryGeneratorWaypoint  trajectoryGeneratorWaypoint;
     
-    MatrixXd vel = MatrixXd::Zero(2, 3); 
+    MatrixXd vel = MatrixXd::Zero(2, 3);
     MatrixXd acc = MatrixXd::Zero(2, 3);
 
     vel.row(0) = _startVel;
-
+    float total_time = 5;
     // give an arbitraty time allocation, all set all durations as 1 in the commented function.
-    _polyTime  = timeAllocation(path);
+    _polyTime  = timeAllocation(path, total_time);
 
     // generate a minimum-snap piecewise monomial polynomial-based trajectory
     _polyCoeff = trajectoryGeneratorWaypoint.PolyQPGeneration(_dev_order, path, vel, acc, _polyTime);
@@ -89,7 +93,7 @@ void trajGeneration(Eigen::MatrixXd path)
     visWayPointPath(path);
 
     //After you finish your homework, you can use the function visWayPointTraj below to visulize your trajectory
-    //visWayPointTraj( _polyCoeff, _polyTime);
+    visWayPointTraj( _polyCoeff, _polyTime, path);
 }
 
 int main(int argc, char** argv)
@@ -131,12 +135,13 @@ int main(int argc, char** argv)
     return 0;
 }
 
-void visWayPointTraj( MatrixXd polyCoeff, VectorXd time)
-{        
+void visWayPointTraj( MatrixXd polyCoeff, VectorXd time, const MatrixXd& Path)
+{
+    cout<<"visWayPointTraj"<<endl;
     visualization_msgs::Marker _traj_vis;
 
     _traj_vis.header.stamp       = ros::Time::now();
-    _traj_vis.header.frame_id    = "/map";
+    _traj_vis.header.frame_id    = "world";  
 
     _traj_vis.ns = "traj_node/trajectory_waypoints";
     _traj_vis.id = 0;
@@ -154,12 +159,8 @@ void visWayPointTraj( MatrixXd polyCoeff, VectorXd time)
     _traj_vis.color.r = 1.0;
     _traj_vis.color.g = 0.0;
     _traj_vis.color.b = 0.0;
-
-    double traj_len = 0.0;
     int count = 0;
-    Vector3d cur, pre;
-    cur.setZero();
-    pre.setZero();
+    geometry_msgs::Point cur;
 
     _traj_vis.points.clear();
     Vector3d pos;
@@ -171,13 +172,11 @@ void visWayPointTraj( MatrixXd polyCoeff, VectorXd time)
         for (double t = 0.0; t < time(i); t += 0.01, count += 1)
         {
           pos = getPosPoly(polyCoeff, i, t);
-          cur(0) = pt.x = pos(0);
-          cur(1) = pt.y = pos(1);
-          cur(2) = pt.z = pos(2);
-          _traj_vis.points.push_back(pt);
+          cur.x = pos(0);
+          cur.y = pos(1);
+          cur.z = pos(2);
+          _traj_vis.points.push_back(cur);
 
-          if (count) traj_len += (pre - cur).norm();
-          pre = cur;
         }
     }
 
@@ -247,7 +246,7 @@ void visWayPointPath(MatrixXd path)
     _wp_path_vis_pub.publish(line_list);
 }
 
-Vector3d getPosPoly( MatrixXd polyCoeff, int k, double t )
+Vector3d getPosPoly(MatrixXd polyCoeff, int k, double t )
 {
     Vector3d ret;
 
@@ -269,9 +268,25 @@ Vector3d getPosPoly( MatrixXd polyCoeff, int k, double t )
     return ret;
 }
 
-VectorXd timeAllocation( MatrixXd Path)
+VectorXd timeAllocation(const MatrixXd& Path, float total_time)
 { 
     VectorXd time(Path.rows() - 1);
+    // vector<float> length;
+    // float total_length = 0;
+    // for(int i = 1; i < Path.rows(); i++){
+    //     float l = sqrt(pow(Path(i, 0) - Path(i-1, 0), 2) +
+    //                  pow(Path(i, 1) - Path(i-1, 1), 2) +
+    //                  pow(Path(i, 2) - Path(i-1, 2), 2));
+    //                  length.push_back(l);
+    //                  total_length += l;
+
+    // }
+    // for(int i = 0; i < time.size(); i++){
+    //     time(i) = length[i] / total_length * total_time;
+    //     cout<<"  "<<length[i] / total_length * total_time<<"  "<<endl;
+    // }
+    // cout<<"time: "<<time<<endl;
+    time.setOnes();
     
     /*
 
