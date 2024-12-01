@@ -91,7 +91,7 @@
     "/opt/ros/noetic/lib/python3/dist-packages"
   ],
   "editor.formatOnSave": false,
-  "C_Cpp.clang_format_style": "{ BasedOnStyle: Google, IndentWidth: 2, ColumnLimit: 0}",
+  "C_Cpp.clang_format_style": "{ BasedOnStyle: Google, IndentWidth: 4, ColumnLimit: 0}",
   "python.analysis.extraPaths": [
     "/home/ji/ros_ws/mapless-planner/devel/lib/python3/dist-packages",
     "/opt/ros/noetic/lib/python3/dist-packages"

@@ -11,17 +11,17 @@ track_points_y: [0,0.000152305,0.000609173,0.00137047,0.00243595,0.0038053,0.005
 
 desired_v: 0.8 # desired velocity
 
-ll: 1.282 # ll of the car
-dt: 0.05
-rho: 1.0 # J = (x-x_r)^2+ (y-y_r)^2 + rho * (phi-phi_r)^2
-N: 40 # horizon
-rhoN: 1.0
+ll: 1.282       # ll of the car   汽车的轴距（即前后轮之间的距离），影响车辆的转弯半径。
+dt: 0.05        # 时间步长，用于离散化状态转移。
+rho: 1.0        # J = (x-x_r)^2+ (y-y_r)^2 + rho * (phi-phi_r)^2 权重，用于目标函数中，描述车辆位置和航向误差的惩罚项。
+N: 40           # horizon 预测时域的步长，通常指 MPC 或路径规划中的预测 horizon（预估的未来步骤数）
+rhoN: 1.0       # 通常是最终状态（目标点）的权重
 
 # lower and upper bound
 v_max: 2.0
 a_max: 2.0
-delta_max: 1.3
-ddelta_max: 1.3
+delta_max: 1.3  # 最大方向盘转角（通常指最大转向角）
+ddelta_max: 1.3 # 最大转向角变化率（方向盘的变化速率限制）
 
 # ctrl delay
-delay: 0.125
+delay: 0.125    # 控制延迟，表示控制信号从计算到实际执行之间的时间延迟
