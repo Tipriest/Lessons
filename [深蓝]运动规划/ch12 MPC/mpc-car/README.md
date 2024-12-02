@@ -1,5 +1,6 @@
 ## HOW TO RUN
 ```
+路径中有中文，请单独把mpc-ros文件夹拷贝出去进行编译运行
 ./install_tools.sh
 catkin_make -j1
 source devel/setup.zsh
