@@ -1,3 +1,7 @@
+/*
+代码及推导过程参考借鉴：
+https://blog.csdn.net/qq_42286607/article/details/124972866
+*/
 #pragma once
 #include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/Path.h>
@@ -59,15 +63,33 @@ class MpcCar {
 
     void linearization(const double& phi,
                        const double& v,
-                       const double& delta) {
+                       const double& delta,
+                       const double& x,
+                       const double& y) {
         // TODO: set values to Ad_, Bd_, gd_
         // ...
         // Ad_已经是identity的了
-        Ad_(0, 3) = cos(phi) * dt_;
-        Ad_(1, 3) = sin(phi) * dt_;
-        Ad_(2, 3) = tan(delta) * dt_ / ll_;
+        // 使用当前的位置x0_observe_
+        // 使用当前的期望phi, v, delta
 
-        Bd_(3, 0) = 1;
+        Ad_ <<  0, 0, -v*sin(phi), cos(phi),
+                0, 0,  v*cos(phi), sin(phi),
+                0, 0, 0, tan(delta) / ll_,
+                0, 0, 0, 0;
+
+        Bd_ <<  0, 0,
+                0, 0,
+                0, v/(ll_*pow(cos(delta),2)),
+                1, 0;
+
+        gd_ <<  v*phi*sin(phi),
+                -v*phi*cos(phi),
+                -v*delta/(ll_*pow(cos(delta),2)),
+                0;
+        
+        Ad_ = MatrixA::Identity() + dt_ * Ad_;
+        Bd_ = dt_ * Bd_;
+        gd_ = dt_ * gd_;
         return;
     }
 
@@ -91,8 +113,9 @@ class MpcCar {
      * @param[in] v             车辆的速度（设置为期望速度 desired_v_）
      * @param[in] delta         车辆的转向角（需要根据曲率计算）
      */
-    void calLinPoint(const double& s0, double& phi, double& v, double& delta) {
+    void calLinPoint(const double& s0, double& phi, double& v, double& delta, double& x, double& y) {
         // 分别获取曲线在 s0 处的速度（即一阶导数 dxy）和加速度（即二阶导数 ddxy）
+        Eigen::Vector2d xy = s_(s0, 0);
         Eigen::Vector2d dxy = s_(s0, 1);
         Eigen::Vector2d ddxy = s_(s0, 2);
         double dx = dxy.x();
@@ -100,6 +123,8 @@ class MpcCar {
         double ddx = ddxy.x();
         double ddy = ddxy.y();
         double dphi = (ddy * dx - dy * ddx) / (dx * dx + dy * dy);
+        x = xy(0);
+        y = xy(1);
         phi = atan2(dy, dx);
         v = desired_v_;
         delta = atan2(ll_ * dphi, 1.0);
@@ -169,7 +194,8 @@ class MpcCar {
         q_.resize(m * N_, 1);
         
         // stage cost
-        // 对速度的惩罚一直都是0，为什么?
+        // 对速度的惩罚一直都是0
+        // 具体的Qx参考README中J的设置
         Qx_.resize(n * N_, n * N_);
         Qx_.setIdentity();
         for (int i = 1; i < N_; ++i) {
@@ -187,41 +213,56 @@ class MpcCar {
         l_.resize(n_cons * N_, 1);
         u_.resize(n_cons * N_, 1);
         // v constrains, 选择矩阵，从 n * N_ 个状态变量中选择出对应的v
+
+        /* *
+        *               /  x1  \
+        *               |  x2  |
+        *  lx_ <=  Cx_  |  x3  |  <= ux_
+        *               | ...  |
+        *               \  xN  /
+        * */
         Cx_.resize(1 * N_, n * N_);
         lx_.resize(1 * N_, 1);
         ux_.resize(1 * N_, 1);
         // a delta ddelta constrains 选择矩阵，从 m * N_ 个控制输入中选择出对应的a, delta及ddelta
         // 有一点需要注意是ddelta不是选择的是相减出来的
+        /* *
+        *               /  u0  \
+        *               |  u1  |
+        *  lu_ <=  Cu_  |  u2  |  <= uu_
+        *               | ...  |
+        *               \ uN-1 /
+        * */
         Cu_.resize(3 * N_, m * N_);
         lu_.resize(3 * N_, 1);
         uu_.resize(3 * N_, 1);
         // set lower and upper boundaries
-        // for (int i = 0; i < N_; ++i) {
-        //     // TODO: set stage constraints of inputs (a, delta, ddelta)
-        //     // -a_max <= a <= a_max for instance:
-        //     Cu_.coeffRef(i * 3 + 0, i * m + 0) = 1;
-        //     lu_.coeffRef(i * 3 + 0, 0) = -a_max_;
-        //     uu_.coeffRef(i * 3 + 0, 0) = a_max_;
+        for (int i = 0; i < N_; ++i) {
+            // TODO: set stage constraints of inputs (a, delta, ddelta)
+            // -a_max <= a <= a_max for instance:
+            Cu_.coeffRef(i * 3 + 0, i * m + 0) = 1;
+            lu_.coeffRef(i * 3 + 0, 0) = -a_max_;
+            uu_.coeffRef(i * 3 + 0, 0) = a_max_;
 
-        //     // -delta_max <= delta <= delta_max for instance:
-        //     Cu_.coeffRef(i * 3 + 1, i * m + 1) = 1;
-        //     lu_.coeffRef(i * 3 + 1, 0) = -delta_max_;
-        //     uu_.coeffRef(i * 3 + 1, 0) = delta_max_;
+            // -delta_max <= delta <= delta_max for instance:
+            Cu_.coeffRef(i * 3 + 1, i * m + 1) = 1;
+            lu_.coeffRef(i * 3 + 1, 0) = -delta_max_;
+            uu_.coeffRef(i * 3 + 1, 0) = delta_max_;
 
-        //     // -ddelta_max <= ddelta <= ddelta_max for instance:
-        //     Cu_.coeffRef(i * 3 + 2, i * m + 1) = 1;
-        //     if(i > 0){
-        //       Cu_.coeffRef(i * 3 + 2, (i - 1) * m + 1) = -1;
-        //     }
-        //     lu_.coeffRef(i * 3 + 2, 0) = -ddelta_max_;
-        //     uu_.coeffRef(i * 3 + 2, 0) = ddelta_max_;
+            // -ddelta_max <= ddelta <= ddelta_max for instance:
+            Cu_.coeffRef(i * 3 + 2, i * m + 1) = 1;
+            if(i > 0){
+              Cu_.coeffRef(i * 3 + 2, (i - 1) * m + 1) = -1;
+            }
+            lu_.coeffRef(i * 3 + 2, 0) = -ddelta_max_ * dt_;
+            uu_.coeffRef(i * 3 + 2, 0) = ddelta_max_ * dt_;
 
-        //     // TODO: set stage constraints of states (v)
-        //     // -v_max <= v <= v_max
-        //     Cx_.coeffRef(i, i * n + 3) = 1;
-        //     lx_.coeffRef(i, 0) = -v_max_;
-        //     ux_.coeffRef(i, 0) = v_max_;
-        // }
+            // TODO: set stage constraints of states (v)
+            // -v_max <= v <= v_max
+            Cx_.coeffRef(i, i * n + 3) = 1;
+            lx_.coeffRef(i, 0) = -v_max_;
+            ux_.coeffRef(i, 0) = v_max_;
+        }
         // set predict mats size
         predictState_.resize(N_);
         predictInput_.resize(N_);
@@ -234,7 +275,7 @@ class MpcCar {
     }
 
     int solveQP(const VectorX& x0_observe) {
-        // x0_observe_应该是这个时刻的状态 
+        // x0_observe_是当前时刻的状态 
         x0_observe_ = x0_observe;
         historyInput_.pop_front();
         historyInput_.push_back(predictInput_.front());
@@ -247,21 +288,22 @@ class MpcCar {
         AA.setZero(n * N_, n);
         gg.setZero(n * N_, 1);
         double s0 = s_.findS(x0.head(2));
-        double phi, v, delta;
+        double phi, v, delta, x, y;
         double last_phi = x0(2);
         Eigen::SparseMatrix<double> qx;
         qx.resize(n * N_, 1);
         
         for (int i = 0; i < N_; ++i) {
-            // 根据参数化曲线预测下一步时，期望的phi，v，delta 
-            calLinPoint(s0, phi, v, delta);
+            // 当前在曲线上的s0点，计算出当前的phi, v, delta期望
+            calLinPoint(s0, phi, v, delta, x, y);
             if (phi - last_phi > M_PI) {
                 phi -= 2 * M_PI;
             } else if (phi - last_phi < -M_PI) {
                 phi += 2 * M_PI;
             }
             last_phi = phi;
-            linearization(phi, v, delta);
+            // 得到这一步期望的phi, v和delta
+            linearization(phi, v, delta, x, y);
             // calculate big state-space matrices
             /* *                BB                 AA
              * x1    /       B    0  ... 0 \    /   A \
@@ -278,23 +320,24 @@ class MpcCar {
                 gg.block(0, 0, n, 1) = gd_;
             } else {
                 // TODO: set BB AA gg
-                for (int j = 0; j <= i; j++) {
-                    BB.block(i * n, j * m, n, m) = matrix_power(Ad_, i - j) * Bd_;
+                BB.block(i * n, i * m, n, m) = Bd_;
+                for (int j = i - 1; j >= 0; --j) {
+                    BB.block(i * n, j * m, n, m) = Ad_ * BB.block((i - 1) * n, j * m, n, m);
                 }
-                AA.block(i * n, 0, n, n) = matrix_power(Ad_, i + 1);
-                gg.block(i * n, 0, n, 1) = gd_;
+                AA.block(i * n, 0, n, n) = Ad_ * AA.block((i - 1) * n, 0, n, n);
+                gg.block(i * n, 0, n, 1) = Ad_ * gg.block((i - 1) * n, 0, n, 1) + gd_;
             }
             // TODO: set qx
             Eigen::Vector2d xy = s_(s0);  // reference (x_r, y_r)
-            qx.coeffRef(i * n + 0, 0) = xy(0) - x0_observe_(0);
-            qx.coeffRef(i * n + 1, 0) = xy(1) - x0_observe_(1);
-            qx.coeffRef(i * n + 2, 0) = phi   - x0_observe_(2);
-            qx.coeffRef(i * n + 3, 0) = v     - x0_observe_(3);
+            qx.coeffRef(i * n + 0, 0) = -Qx_.coeffRef(i * n + 0, i * n + 0) * xy(0);
+            qx.coeffRef(i * n + 1, 0) = -Qx_.coeffRef(i * n + 1, i * n + 1) * xy(1);
+            qx.coeffRef(i * n + 2, 0) = -Qx_.coeffRef(i * n + 2, i * n + 2) * phi;
+            qx.coeffRef(i * n + 3, 0) = -Qx_.coeffRef(i * n + 3, i * n + 3) * v;
             s0 += desired_v_ * dt_;
             s0 = s0 < s_.arcL() ? s0 : s_.arcL();
         }
         
-        Eigen::SparseMatrix<double> BB_sparse = BB.sparseView();
+        Eigen::SparseMatrix<double> BB_sparse = BB.sparseView();    
         Eigen::SparseMatrix<double> AA_sparse = AA.sparseView();
         Eigen::SparseMatrix<double> gg_sparse = gg.sparseView();
         Eigen::SparseMatrix<double> x0_sparse = x0.sparseView();
@@ -318,6 +361,7 @@ class MpcCar {
         Eigen::SparseMatrix<double> BBT_sparse = BB_sparse.transpose();
         P_ = BBT_sparse * Qx_ * BB_sparse;
         q_ = BBT_sparse * Qx_.transpose() * (AA_sparse * x0_sparse + gg_sparse) + BBT_sparse * qx;
+        // q_ = BBT_sparse * Qx_.transpose() * (AA_sparse * x0_sparse + gg_sparse);
         // osqp
         Eigen::VectorXd q_d = q_.toDense();
         Eigen::VectorXd l_d = l_.toDense();
