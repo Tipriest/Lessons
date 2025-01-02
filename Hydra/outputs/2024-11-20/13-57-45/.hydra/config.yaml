@@ -1,0 +1,2 @@
+epoch: 100
+net_path: ../resnet_152.pth
