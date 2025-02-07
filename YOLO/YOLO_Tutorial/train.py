@@ -25,13 +25,13 @@ from engine import build_trainer
 def parse_args():
     parser = argparse.ArgumentParser(description='YOLO-Tutorial')
     # Basic
-    parser.add_argument('--cuda', action='store_true', default=False,
+    parser.add_argument('--cuda', action='store_true', default=True,
                         help='use cuda.')
     parser.add_argument('-size', '--img_size', default=640, type=int, 
                         help='input image size')
     parser.add_argument('--num_workers', default=4, type=int, 
                         help='Number of workers used in dataloading')
-    parser.add_argument('--tfboard', action='store_true', default=False,
+    parser.add_argument('--tfboard', action='store_true', default=True,
                         help='use tensorboard')
     parser.add_argument('--save_folder', default='weights/', type=str, 
                         help='path to save weight')
@@ -75,7 +75,7 @@ def parse_args():
     # Dataset
     parser.add_argument('--root', default='/home/tipriest/data/',
                         help='data root')
-    parser.add_argument('-d', '--dataset', default='coco',
+    parser.add_argument('-d', '--dataset', default='voc',
                         help='coco, voc, widerface, crowdhuman')
     parser.add_argument('--load_cache', action='store_true', default=False,
                         help='load data into memory.')
