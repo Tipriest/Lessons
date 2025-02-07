@@ -9,13 +9,11 @@ Here is the source code for an introduction to YOLO. We adopted the core concept
 
 ## Requirements
 - We recommend you to use Anaconda to create a conda environment:
-```Shell
-conda create -n yolo python=3.6
-```
-
-- Then, activate the environment:
-```Shell
+```shell
+conda env create -f environment.yml
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 conda activate yolo
+pip install -e .
 ```
 
 - Requirements:

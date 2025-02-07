@@ -1,0 +1,38 @@
+channels:
+- anaconda
+- pytorch
+- conda-forge
+- menpo
+- nvidia
+dependencies:
+- python==3.9.20 # must >= 3.7.0 from korina
+- pip==24.2
+- nvidia-apex
+- scikit-learn==1.5.2
+- scikit-image==0.24.0
+- pytorch-lightning==2.4.0
+- pydensecrf
+- psutil==6.1.0
+- tqdm==4.67.0
+- pandas==2.2.3
+- numpy==1.26.3
+- tensorboard==2.18.0
+- wget
+- seaborn==0.13.2
+- wandb
+- optuna
+- opencv
+- prettytable
+- termcolor
+- hydra-core==1.3.2
+- gdown
+- ffmpeg
+- ffmpeg-python
+- pip:
+  - matplotlib==3.9.2
+  - --find-links https://pytorch-geometric.com/whl/torch-2.5.1+cu118.html
+  - --find-links https://download.pytorch.org/whl/cu118
+  - kornia==0.6.10 # must >= 0.6.10
+  - setuptools==75.6.0
+name: yolo
+

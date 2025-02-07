@@ -8,18 +8,11 @@ YOLO 教程
 
 ## 配置运行环境
 - 首先，我们建议使用Anaconda来创建一个conda的虚拟环境
-```Shell
-conda create -n yolo python=3.6
-```
-
-- 然后, 请激活已创建的虚拟环境
-```Shell
+```shell
+conda env create -f environment.yml
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 conda activate yolo
-```
-
-- 接着，配置环境:
-```Shell
-pip install -r requirements.txt 
+pip install -e .
 ```
 
 项目作者所使用的环境配置:

@@ -45,7 +45,7 @@ def parse_args():
                         help="visualize aux loss.")
     
     # Batchsize
-    parser.add_argument('-bs', '--batch_size', default=16, type=int, 
+    parser.add_argument('-bs', '--batch_size', default=32, type=int, 
                         help='batch size on all the GPUs.')
 
     # Epoch
@@ -73,7 +73,7 @@ def parse_args():
                         help='keep training')
 
     # Dataset
-    parser.add_argument('--root', default='/Users/liuhaoran/Desktop/python_work/object-detection/dataset/',
+    parser.add_argument('--root', default='/home/tipriest/data/',
                         help='data root')
     parser.add_argument('-d', '--dataset', default='coco',
                         help='coco, voc, widerface, crowdhuman')
