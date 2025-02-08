@@ -9,6 +9,8 @@ import time
 import os
 import numpy as np
 import random
+import wandb
+from tqdm import tqdm
 
 # ----------------- Torch Components -----------------
 import torch
@@ -96,7 +98,7 @@ class Yolov8Trainer(object):
         self.evaluator = build_evluator(self.args, self.data_cfg, self.val_transform, self.device)
 
         # ---------------------------- 构建梯度缩放器 ----------------------------
-        self.scaler = torch.cuda.amp.GradScaler(enabled=self.args.fp16)
+        self.scaler = torch.amp.GradScaler('cuda', enabled=self.args.fp16)
 
         # ---------------------------- 构建优化器 ----------------------------
         ## 梯度累加的次数
@@ -123,7 +125,7 @@ class Yolov8Trainer(object):
 
     # 训练模型的主函数
     def train(self, model):
-        for epoch in range(self.start_epoch, self.args.max_epoch):
+        for epoch in tqdm(range(self.start_epoch, self.args.max_epoch)):
             if self.args.distributed:
                 self.train_loader.batch_sampler.sampler.set_epoch(epoch)
 
@@ -140,7 +142,7 @@ class Yolov8Trainer(object):
                                 'optimizer': self.optimizer.state_dict(),
                                 'epoch': self.epoch,
                                 'args': self.args}, 
-                                checkpoint_path)                      
+                                checkpoint_path)
 
             # 训练模型一个epoch
             self.epoch = epoch
@@ -179,7 +181,7 @@ class Yolov8Trainer(object):
                             checkpoint_path)               
             # 如果Evaluator类不是None，则进行测试
             else:
-                print('Evaluating model ...')
+                # print('Evaluating model ...')
                 # 将模型切换至torch要求的eval模式
                 model_eval.eval()
                 # 设置模型中的trainable为False，以便模型做前向推理（包括各种后处理）
@@ -202,7 +204,7 @@ class Yolov8Trainer(object):
                                 'mAP': round(self.best_map*100, 1),
                                 'optimizer': self.optimizer.state_dict(),
                                 'epoch': self.epoch,
-                                'args': self.args}, 
+                                'args': self.args},
                                 checkpoint_path)                      
 
                 # 将模型切换至torch要求的train模式，以便继续训练
@@ -223,7 +225,7 @@ class Yolov8Trainer(object):
         accumulate = accumulate = max(1, round(64 / self.args.batch_size))
 
         # 训练模型一个epoch
-        for iter_i, (images, targets) in enumerate(self.train_loader):
+        for iter_i, (images, targets) in tqdm(enumerate(self.train_loader)):
             ni = iter_i + self.epoch * epoch_size
             # Warmup阶段
             if ni <= nw:
@@ -254,7 +256,7 @@ class Yolov8Trainer(object):
                 vis_data(images*255, targets)
 
             # 前向推理 & 计算损失
-            with torch.cuda.amp.autocast(enabled=self.args.fp16):
+            with torch.amp.autocast('cuda', enabled=self.args.fp16):
                 # 前向推理
                 outputs = model(images)
                 # 计算损失
@@ -297,16 +299,18 @@ class Yolov8Trainer(object):
                 cur_lr = [param_group['lr']  for param_group in self.optimizer.param_groups]
                 # 打印一些基本信息，如训练的epoch、iteration和学习率
                 log =  '[Epoch: {}/{}]'.format(self.epoch+1, self.args.max_epoch)
-                log += '[Iter: {}/{}]'.format(iter_i, epoch_size)
-                log += '[lr: {:.6f}]'.format(cur_lr[2])
+                # log += '[Iter: {}/{}]'.format(iter_i, epoch_size)
+                # log += '[lr: {:.6f}]'.format(cur_lr[2])
+                wandb.log({'Epoch': self.epoch+1, 'Iter': iter_i, 'lr': cur_lr[2]})
                 # 打印模型的loss
                 for k in loss_dict_reduced.keys():
-                    log += '[{}: {:.2f}]'.format(k, loss_dict_reduced[k])
+                    # log += '[{}: {:.2f}]'.format(k, loss_dict_reduced[k])
+                    wandb.log({k: loss_dict_reduced[k]})
                 # 打印一些其他信息，比如当前迭代的耗时和图像尺寸
-                log += '[time: {:.2f}]'.format(t1 - t0)
-                log += '[size: {}]'.format(img_size)
-
-                print(log, flush=True)
+                # log += '[time: {:.2f}]'.format(t1 - t0)
+                # log += '[size: {}]'.format(img_size)
+                wandb.log({'time': t1 - t0, 'size': img_size})
+                # print(log, flush=True)
                 
                 t0 = time.time()
         

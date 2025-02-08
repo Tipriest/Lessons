@@ -5,3 +5,4 @@ devel/
 *.pyc
 *.pkl
 *.pth
+wandb/*
