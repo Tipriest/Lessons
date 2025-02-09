@@ -84,7 +84,7 @@ def parse_args():
     )
 
     # Epoch
-    parser.add_argument("--max_epoch", default=150, type=int, help="max epoch.")
+    parser.add_argument("--max_epoch", default=300, type=int, help="max epoch.")
     parser.add_argument("--wp_epoch", default=1, type=int, help="warmup epoch.")
     parser.add_argument(
         "--eval_epoch",
@@ -101,7 +101,7 @@ def parse_args():
 
     # Model
     parser.add_argument(
-        "-m", "--model", default="yolov1", type=str, help="build yolo"
+        "-m", "--model", default="yolov2", type=str, help="build yolo"
     )
     parser.add_argument(
         "-ct",
@@ -124,7 +124,12 @@ def parse_args():
         help="load pretrained weight",
     )
     parser.add_argument(
-        "-r", "--resume", default=None, type=str, help="keep training"
+        "-r",
+        "--resume",
+        # default="/home/tipriest/Documents/Lessons/weights/voc/yolov1/yolov1_best.pth",
+        default=None,
+        type=str,
+        help="keep training",
     )
 
     # Dataset
@@ -196,7 +201,9 @@ def parse_args():
 
     return parser.parse_args()
 
+
 def wandb_config_add_args(config, args):
+    config.model = args.model
     config.img_size = args.img_size
     config.num_workers = args.num_workers
     config.eval_first = args.eval_first
@@ -206,7 +213,6 @@ def wandb_config_add_args(config, args):
     config.wp_epoch = args.wp_epoch
     config.eval_epoch = args.eval_epoch
     config.no_aug_epoch = args.no_aug_epoch
-    config.model = args.model
     config.conf_thresh = args.conf_thresh
     config.nms_thresh = args.nms_thresh
     config.topk = args.topk
@@ -224,7 +230,8 @@ def wandb_config_add_args(config, args):
     config.world_size = args.world_size
     config.sybn = args.sybn
     return config
-    
+
+
 def train():
     args = parse_args()
     wandb_config = wandb.config
@@ -258,7 +265,6 @@ def train():
         args, model_cfg, device, data_cfg["num_classes"], True
     )
     wandb.watch(model, criterion, log="all")
-
 
     # 如果指定了args.resume，则表明我们要从之前停止的迭代节点继续训练模型
     if distributed_utils.is_main_process and args.resume is not None:
@@ -323,5 +329,5 @@ def train():
 
 
 if __name__ == "__main__":
-    wandb.init(project='yolo', entity='tipriest-hit')
+    wandb.init(project="yolo", entity="tipriest-hit")
     train()
