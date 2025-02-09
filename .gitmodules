@@ -1,3 +1,6 @@
 [submodule "[Datawhale] 模型压缩"]
 	path = [Datawhale] 模型压缩
 	url = git@github.com:datawhalechina/awesome-compression.git
+[submodule "handy-ollama"]
+	path = handy-ollama
+	url = git@github.com:datawhalechina/handy-ollama.git
