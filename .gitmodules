@@ -4,3 +4,6 @@
 [submodule "handy-ollama"]
 	path = handy-ollama
 	url = git@github.com:datawhalechina/handy-ollama.git
+[submodule "wow-rag"]
+	path = wow-rag
+	url = git@github.com:datawhalechina/wow-rag.git
