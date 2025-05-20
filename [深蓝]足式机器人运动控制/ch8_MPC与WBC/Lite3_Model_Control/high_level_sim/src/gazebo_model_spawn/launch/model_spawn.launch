@@ -1,0 +1,27 @@
+<launch>
+    <arg name="rname" default="lite3"/>
+    <arg name="robot_path" value="(find $(arg rname)_description)"/>
+    <arg name="dollar" value="$"/>
+    <arg name="use_xacro" default="true"/>
+    <arg name="user_debug" default="false"/>
+    <arg name="use_camera" default="false"/>
+
+    <!-- Load joint controller configurations from YAML file to parameter server -->
+<!--     <rosparam file="$(arg dollar)$(arg robot_path)/config/robot_control.yaml" command="load"/>
+ -->   
+    <rosparam file="$(arg dollar)$(arg robot_path)/config/robot_torque_controllers_lite3.yaml" command="load"/>
+
+    <!-- Load the URDF into the ROS Parameter Server -->
+    <group if="$(arg use_xacro)">
+        <param name="robot_description"
+            command="$(find xacro)/xacro --inorder '$(arg dollar)$(arg robot_path)/xacro/robot.xacro'
+            DEBUG:=$(arg user_debug)
+            USE_CAMERA:=$(arg use_camera)"/>
+    </group>
+    <group unless="$(arg use_xacro)">
+        <param name="robot_description" command="cat $(arg dollar)$(arg robot_path)/urdf/robot.urdf"/>
+    </group>
+
+    <node pkg="gazebo_model_spawn" type="spawn_model" name="$(anon spawn_model)" args="$(arg rname)" output="screen"/>
+    
+</launch>

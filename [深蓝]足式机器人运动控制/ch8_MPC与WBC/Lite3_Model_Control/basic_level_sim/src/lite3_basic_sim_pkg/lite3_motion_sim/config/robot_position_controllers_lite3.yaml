@@ -1,0 +1,73 @@
+lite3_motion_sim:
+  
+  joint_states_controller:
+      type: joint_state_controller/JointStateController
+      publish_rate: 1000
+
+
+
+  #effort_controllers/JointPositionController  
+  # FL Controllers ------------------------------------------------------------ 
+  /lite3_motion_sim/FL_HipX:
+      type: effort_controllers/JointPositionController
+      joint: FL_HipX
+      pid: {p: 60, i: 0, d: 0.7}
+        
+  /lite3_motion_sim/FL_HipY:
+      type: effort_controllers/JointPositionController
+      joint: FL_HipY
+      pid: {p: 60, i: 0, d: 0.7}
+        
+  /lite3_motion_sim/FL_Knee:
+      type: effort_controllers/JointPositionController
+      joint: FL_Knee
+      pid: {p: 60, i: 0, d: 0.7}
+
+  # FR Controllers ------------------------------------------------------------ 
+  /lite3_motion_sim/FR_HipX:
+      type: effort_controllers/JointPositionController
+      joint: FR_HipX
+      pid: {p: 60, i: 0, d: 0.7}
+        
+  /lite3_motion_sim/FR_HipY:
+      type: effort_controllers/JointPositionController
+      joint: FR_HipY
+      pid: {p: 60, i: 0, d: 0.7}
+        
+  /lite3_motion_sim/FR_Knee:
+      type: effort_controllers/JointPositionController
+      joint: FR_Knee
+      pid: {p: 60, i: 0, d: 0.7}
+
+  # HL Controllers ------------------------------------------------------------ 
+  /lite3_motion_sim/HL_HipX:
+      type: effort_controllers/JointPositionController
+      joint: HL_HipX
+      pid: {p: 60, i: 0, d: 0.7}
+        
+  /lite3_motion_sim/HL_HipY:
+      type: effort_controllers/JointPositionController
+      joint: HL_HipY
+      pid: {p: 60, i: 0, d: 0.7}
+        
+  /lite3_motion_sim/HL_Knee:
+      type: effort_controllers/JointPositionController
+      joint: HL_Knee
+      pid: {p: 60, i: 0, d: 0.7}
+
+  # HR Controllers ------------------------------------------------------------     
+  /lite3_motion_sim/HR_HipX:
+      type: effort_controllers/JointPositionController
+      joint: HR_HipX
+      pid: {p: 60, i: 0, d: 0.7}
+        
+  /lite3_motion_sim/HR_HipY:
+      type: effort_controllers/JointPositionController
+      joint: HR_HipY
+      pid: {p: 60, i: 0, d: 0.7}
+        
+  /lite3_motion_sim/HR_Knee:
+      type: effort_controllers/JointPositionController
+      joint: HR_Knee
+      pid: {p: 60, i: 0, d: 0.7}
+
