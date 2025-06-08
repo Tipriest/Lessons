@@ -6,28 +6,7 @@
         <node if="$(arg gui)" name="joint_state_publisher" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" />
         <node unless="$(arg gui)" name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
         <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
-            <node pkg="rviz" type="rviz" name="rviz" args="-d $(find lite3_motion_sim)/config/lite3_rviz.rviz" required="true" />
+        <node pkg="rviz" type="rviz" name="rviz" args="-d $(find lite3_motion_sim)/config/lite3_rviz.rviz" required="true" />
 
         <!-- args="-d $(find urdf_tutorial)/urdf.rviz"   -->
 </launch>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
