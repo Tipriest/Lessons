@@ -7,3 +7,6 @@
 [submodule "wow-rag"]
 	path = wow-rag
 	url = git@github.com:datawhalechina/wow-rag.git
+[submodule "hands-on-Mujoco"]
+	path = hands-on-Mujoco
+	url = git@github.com:Tipriest/hands-on-Mujoco.git
